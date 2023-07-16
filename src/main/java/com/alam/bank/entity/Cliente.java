@@ -28,11 +28,10 @@ public class Cliente extends Persona{
     private List<Cuenta> cuentas;
 
     public long getEdad() {
-        return ChronoUnit.YEARS.between(LocalDate.now(),
-                this.getFechaNacimiento()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate());
+        return ChronoUnit.YEARS.between(this.getFechaNacimiento()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate(), LocalDate.now());
     }
 
 }

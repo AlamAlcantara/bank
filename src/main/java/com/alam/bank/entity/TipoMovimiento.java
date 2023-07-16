@@ -19,5 +19,5 @@ public class TipoMovimiento {
     private String nombre;
 
     @OneToMany(mappedBy = "tipoMovimiento")
-    private List<Cuenta> movimientos;
+    private List<Movimiento> movimientos;
 }

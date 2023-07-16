@@ -25,10 +25,10 @@ public class Cuenta {
 
     @ManyToOne
     @JoinColumn(name = "id_cliente")
-    private TipoCuenta cliente;
+    private Cliente cliente;
 
     @OneToMany(mappedBy = "cuenta")
-    private List<Cuenta> movimientos;
+    private List<Movimiento> movimientos;
 
     @Column(name = "estado")
     private boolean estado;

@@ -17,11 +17,11 @@ public class Movimiento {
 
     @ManyToOne
     @JoinColumn(name = "id_tipo_movimiento")
-    private TipoCuenta tipoMovimiento;
+    private TipoMovimiento tipoMovimiento;
 
     @ManyToOne
     @JoinColumn(name = "id_cuenta")
-    private TipoCuenta cuenta;
+    private Cuenta cuenta;
 
     @Column(name = "saldo")
     private double saldo;
