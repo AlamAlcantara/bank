@@ -9,7 +9,7 @@ import java.util.List;
 
 public abstract class BaseController <T, R extends BaseService<T>>{
 
-    private R service;
+    protected R service;
 
     public BaseController(R service) {
         this.service = service;

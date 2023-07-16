@@ -1,6 +1,7 @@
 package com.alam.bank.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,5 +22,6 @@ public class TipoCuenta {
     private String nombre;
 
     @OneToMany(mappedBy = "tipoCuenta")
+    @JsonIgnore
     private List<Cuenta> cuentas;
 }

@@ -1,5 +1,7 @@
 package com.alam.bank.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,8 +18,8 @@ public class Cuenta {
     @Column(name = "numeroCuenta")
     private int numeroCuenta;
 
-    @Column(name = "saldo_inicial")
-    private double saldoInicial;
+    @Column(name = "saldo")
+    private double saldo;
 
     @ManyToOne
     @JoinColumn(name = "id_tipo")
@@ -28,9 +30,20 @@ public class Cuenta {
     private Cliente cliente;
 
     @OneToMany(mappedBy = "cuenta")
+    @JsonIgnore
     private List<Movimiento> movimientos;
 
     @Column(name = "estado")
     private boolean estado;
+
+    public void debito(Double monto){
+        if(this.saldo >= monto) {
+            this.saldo -= monto;
+        }
+    }
+
+    public void credito(Double monto){
+        this.saldo += monto;
+    }
 
 }

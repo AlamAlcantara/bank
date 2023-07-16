@@ -1,5 +1,6 @@
 package com.alam.bank.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,5 +20,6 @@ public class TipoMovimiento {
     private String nombre;
 
     @OneToMany(mappedBy = "tipoMovimiento")
+    @JsonIgnore
     private List<Movimiento> movimientos;
 }

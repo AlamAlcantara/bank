@@ -8,7 +8,7 @@ import java.util.List;
 
 public abstract class BaseServiceImpl<T, R extends JpaRepository<T, Integer>> implements BaseService<T>{
 
-    private R repository;
+    protected R repository;
 
     public BaseServiceImpl(R repository){
         this.repository = repository;

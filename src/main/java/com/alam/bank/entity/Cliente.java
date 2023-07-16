@@ -1,5 +1,6 @@
 package com.alam.bank.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +26,7 @@ public class Cliente extends Persona{
     private boolean estado;
 
     @OneToMany(mappedBy = "cliente")
+    @JsonIgnore
     private List<Cuenta> cuentas;
 
     public long getEdad() {
