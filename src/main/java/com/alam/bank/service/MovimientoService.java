@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
+import java.util.List;
 
 @Repository
 public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRepository> {
@@ -25,6 +26,10 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
 
     private TipoMovimientoRepository tipoMovimientoRepository;
 
+    private static final String CREDITO = "CREDITO";
+    private static final String DEBITO = "DEBITO";
+
+
     @Autowired
     public MovimientoService(MovimientoRepository repository,
                              TipoMovimientoRepository tipoMovimientoRepository,
@@ -35,7 +40,7 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
     }
 
     public MovimientoResponseDTO debito(MovimientoRequestDTO movimientoRequestDTO){
-        if(movimientoRequestDTO.getIdCuenta() == null || movimientoRequestDTO.getMonto() <= 0)
+        if(movimientoRequestDTO.getIdCuenta() == null || movimientoRequestDTO.getMonto() == 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         Cuenta cuenta = cuentaService.getById(movimientoRequestDTO.getIdCuenta());
@@ -43,13 +48,19 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
         if(cuenta.getSaldo() < movimientoRequestDTO.getMonto())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo no disponible");
 
-        TipoMovimiento tipoMovimiento = this.tipoMovimientoRepository.findByNombre("DEBITO");
+        if(this.sobrepasaLimiteDeRetiro(cuenta))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cupo diario Excedido");
+
+        TipoMovimiento tipoMovimiento = this.tipoMovimientoRepository.findByNombre(DEBITO);
 
         //Actualizando saldo
         double saldoInicial = cuenta.getSaldo();
         cuenta.debito(movimientoRequestDTO.getMonto());
 
         //Armando movimiento
+        if(movimientoRequestDTO.getMonto() > 0)
+            movimientoRequestDTO.setMonto(movimientoRequestDTO.getMonto() * -1);
+
         Movimiento movimiento = Movimiento.builder()
                 .tipoMovimiento(tipoMovimiento)
                 .valor(movimientoRequestDTO.getMonto())
@@ -74,7 +85,7 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
 
         Cuenta cuenta = cuentaService.getById(movimientoRequestDTO.getIdCuenta());
 
-        TipoMovimiento tipoMovimiento = this.tipoMovimientoRepository.findByNombre("CREDITO");
+        TipoMovimiento tipoMovimiento = this.tipoMovimientoRepository.findByNombre(CREDITO);
 
         //Actualizando saldo
         double saldoInicial = cuenta.getSaldo();
@@ -97,6 +108,21 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
         cuentaService.update(cuenta.getNumeroCuenta(), cuenta);
 
         return convertToDTO(movimiento);
+    }
+
+    public boolean sobrepasaLimiteDeRetiro(Cuenta cuenta) {
+
+        List<Movimiento> movimientoList = this.repository.findBycuentaIdFecha(cuenta.getNumeroCuenta(), new Date());
+
+        if(movimientoList.isEmpty())
+            return false;
+
+        Double montoTotal = movimientoList.stream()
+                .filter(m -> m.getTipoMovimiento().getNombre().equals(DEBITO))
+                .map(m -> m.getValor())
+                .reduce(0d, Double::sum);
+
+        return (montoTotal * -1) >= limiteRetiroDiario;
     }
 
     public MovimientoResponseDTO convertToDTO(Movimiento movimiento) {
