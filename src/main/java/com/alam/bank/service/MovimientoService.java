@@ -1,10 +1,11 @@
 package com.alam.bank.service;
 
-import com.alam.bank.entity.Cuenta;
+import com.alam.bank.converter.MovimientoDtoConverter;
 import com.alam.bank.entity.Movimiento;
 import com.alam.bank.entity.TipoMovimiento;
+import com.alam.bank.models.CuentaDto;
+import com.alam.bank.models.MovimientoDto;
 import com.alam.bank.models.MovimientoRequestDTO;
-import com.alam.bank.models.MovimientoResponseDTO;
 import com.alam.bank.repository.interfaces.MovimientoRepository;
 import com.alam.bank.repository.interfaces.TipoMovimientoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 @Repository
-public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRepository> {
+public class MovimientoService extends BaseServiceImpl<MovimientoDto, Movimiento, MovimientoRepository> {
 
     @Value("${limite.retiro.diario}")
     private int limiteRetiroDiario;
@@ -32,18 +33,19 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
 
     @Autowired
     public MovimientoService(MovimientoRepository repository,
+                             MovimientoDtoConverter movimientoDtoConverter,
                              TipoMovimientoRepository tipoMovimientoRepository,
                              CuentaService cuentaService){
-        super(repository);
+        super(repository, movimientoDtoConverter);
         this.cuentaService = cuentaService;
         this.tipoMovimientoRepository = tipoMovimientoRepository;
     }
 
-    public MovimientoResponseDTO debito(MovimientoRequestDTO movimientoRequestDTO){
+    public MovimientoDto debito(MovimientoRequestDTO movimientoRequestDTO){
         if(movimientoRequestDTO.getIdCuenta() == null || movimientoRequestDTO.getMonto() == 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        Cuenta cuenta = cuentaService.getById(movimientoRequestDTO.getIdCuenta());
+        CuentaDto cuenta = cuentaService.getById(movimientoRequestDTO.getIdCuenta());
 
         if(cuenta.getSaldo() < movimientoRequestDTO.getMonto())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Saldo no disponible");
@@ -55,13 +57,15 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
 
         //Actualizando saldo
         double saldoInicial = cuenta.getSaldo();
-        cuenta.debito(movimientoRequestDTO.getMonto());
+        if(saldoInicial >= movimientoRequestDTO.getMonto()) {
+            cuenta.setSaldo(cuenta.getSaldo() - movimientoRequestDTO.getMonto());
+        }
 
         //Armando movimiento
         if(movimientoRequestDTO.getMonto() > 0)
             movimientoRequestDTO.setMonto(movimientoRequestDTO.getMonto() * -1);
 
-        Movimiento movimiento = Movimiento.builder()
+        MovimientoDto movimiento = MovimientoDto.builder()
                 .tipoMovimiento(tipoMovimiento)
                 .valor(movimientoRequestDTO.getMonto())
                 .saldoInicial(saldoInicial)
@@ -71,28 +75,28 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
                 .build();
 
         //Guardando movimiento
-        movimiento = this.repository.save(movimiento);
+        movimiento = this.create(movimiento);
 
         //Actualizando cuenta
         cuentaService.update(cuenta.getNumeroCuenta(), cuenta);
 
-        return convertToDTO(movimiento);
+        return movimiento;
     }
 
-    public MovimientoResponseDTO credito(MovimientoRequestDTO movimientoRequestDTO){
+    public MovimientoDto credito(MovimientoRequestDTO movimientoRequestDTO){
         if(movimientoRequestDTO.getIdCuenta() == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
-        Cuenta cuenta = cuentaService.getById(movimientoRequestDTO.getIdCuenta());
+        CuentaDto cuenta = cuentaService.getById(movimientoRequestDTO.getIdCuenta());
 
         TipoMovimiento tipoMovimiento = this.tipoMovimientoRepository.findByNombre(CREDITO);
 
         //Actualizando saldo
         double saldoInicial = cuenta.getSaldo();
-        cuenta.credito(movimientoRequestDTO.getMonto());
+        cuenta.setSaldo(cuenta.getSaldo() + movimientoRequestDTO.getMonto());
 
         //Armando movimiento
-        Movimiento movimiento = Movimiento.builder()
+        MovimientoDto movimiento = MovimientoDto.builder()
                 .tipoMovimiento(tipoMovimiento)
                 .valor(movimientoRequestDTO.getMonto())
                 .saldoInicial(saldoInicial)
@@ -102,15 +106,15 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
                 .build();
 
         //Guardando movimiento
-        movimiento = this.repository.save(movimiento);
+        movimiento = this.create(movimiento);
 
         //Actualizando cuenta
         cuentaService.update(cuenta.getNumeroCuenta(), cuenta);
 
-        return convertToDTO(movimiento);
+        return movimiento;
     }
 
-    public boolean sobrepasaLimiteDeRetiro(Cuenta cuenta) {
+    public boolean sobrepasaLimiteDeRetiro(CuentaDto cuenta) {
 
         List<Movimiento> movimientoList = this.repository.findBycuentaIdFecha(cuenta.getNumeroCuenta(), new Date());
 
@@ -123,22 +127,6 @@ public class MovimientoService extends BaseServiceImpl<Movimiento, MovimientoRep
                 .reduce(0d, Double::sum);
 
         return (montoTotal * -1) >= limiteRetiroDiario;
-    }
-
-    public MovimientoResponseDTO convertToDTO(Movimiento movimiento) {
-
-        MovimientoResponseDTO dto = MovimientoResponseDTO.builder()
-                .fecha(movimiento.getFecha())
-                .cliente(movimiento.getCuenta().getCliente().getNombre())
-                .numeroCuenta(movimiento.getCuenta().getNumeroCuenta())
-                .tipo(movimiento.getCuenta().getTipoCuenta().getNombre())
-                .estado(movimiento.getCuenta().isEstado())
-                .saldoInicial(movimiento.getSaldoInicial())
-                .movimiento(movimiento.getValor())
-                .saldoDisponible(movimiento.getCuenta().getSaldo())
-                .build();
-
-        return dto;
     }
 
 }
