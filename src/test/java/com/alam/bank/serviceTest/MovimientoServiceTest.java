@@ -1,10 +1,12 @@
-package com.alam.bank.service;
+package com.alam.bank.serviceTest;
 
 import com.alam.bank.converter.MovimientoDtoConverter;
 import com.alam.bank.models.CuentaDto;
 import com.alam.bank.models.MovimientoRequestDTO;
 import com.alam.bank.repository.interfaces.MovimientoRepository;
 import com.alam.bank.repository.interfaces.TipoMovimientoRepository;
+import com.alam.bank.service.CuentaService;
+import com.alam.bank.service.MovimientoService;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
