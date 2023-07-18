@@ -41,6 +41,19 @@ public class MovimientoService extends BaseServiceImpl<MovimientoDto, Movimiento
         this.tipoMovimientoRepository = tipoMovimientoRepository;
     }
 
+    @Override
+    public MovimientoDto create(MovimientoDto model) {
+
+        TipoMovimiento tipoMovimiento = this.tipoMovimientoRepository.findByNombre(model.getTipoMovimiento());
+
+        Movimiento movimiento = this.dtoConverter.fromDto(model);
+        movimiento.setTipoMovimiento(tipoMovimiento);
+
+        movimiento = this.repository.save(movimiento);
+
+        return this.dtoConverter.fromEntity(movimiento);
+    }
+
     public MovimientoDto debito(MovimientoRequestDTO movimientoRequestDTO){
         if(movimientoRequestDTO.getIdCuenta() == null || movimientoRequestDTO.getMonto() == 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -66,7 +79,7 @@ public class MovimientoService extends BaseServiceImpl<MovimientoDto, Movimiento
             movimientoRequestDTO.setMonto(movimientoRequestDTO.getMonto() * -1);
 
         MovimientoDto movimiento = MovimientoDto.builder()
-                .tipoMovimiento(tipoMovimiento)
+                .tipoMovimiento(tipoMovimiento.getNombre())
                 .valor(movimientoRequestDTO.getMonto())
                 .saldoInicial(saldoInicial)
                 .saldoDisponible(cuenta.getSaldo())
@@ -97,7 +110,7 @@ public class MovimientoService extends BaseServiceImpl<MovimientoDto, Movimiento
 
         //Armando movimiento
         MovimientoDto movimiento = MovimientoDto.builder()
-                .tipoMovimiento(tipoMovimiento)
+                .tipoMovimiento(tipoMovimiento.getNombre())
                 .valor(movimientoRequestDTO.getMonto())
                 .saldoInicial(saldoInicial)
                 .saldoDisponible(cuenta.getSaldo())

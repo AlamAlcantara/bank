@@ -14,7 +14,7 @@ import java.util.Date;
 public class MovimientoDto {
     private int id;
 
-    private TipoMovimiento tipoMovimiento;
+    private String tipoMovimiento;
 
     private CuentaDto cuenta;
 

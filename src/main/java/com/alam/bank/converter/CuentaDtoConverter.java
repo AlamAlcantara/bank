@@ -23,13 +23,16 @@ public class CuentaDtoConverter implements DtoConverter<Cuenta, CuentaDto> {
     @Override
     public List<Cuenta> fromDtoList(List<CuentaDto> dtoList) {
         return dtoList.stream()
-                .map(d -> this.modelMapper.map(d, Cuenta.class))
+                .map(d -> this.fromDto(d))
                 .collect(Collectors.toList());
     }
 
     @Override
     public CuentaDto fromEntity(Cuenta entity) {
-        return this.modelMapper.map(entity, CuentaDto.class);
+        CuentaDto cuentaDto =  this.modelMapper.map(entity, CuentaDto.class);
+        cuentaDto.setTipoCuenta(entity.getTipoCuenta().getNombre());
+
+        return cuentaDto;
     }
 
     @Override

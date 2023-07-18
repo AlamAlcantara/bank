@@ -1,7 +1,5 @@
 package com.alam.bank.models;
 
-import com.alam.bank.entity.Cliente;
-import com.alam.bank.entity.TipoCuenta;
 import lombok.*;
 
 @Builder
@@ -13,7 +11,7 @@ public class CuentaDto {
 
     private int numeroCuenta;
 
-    private TipoCuenta tipoCuenta;
+    private String tipoCuenta;
 
     private double saldo;
 

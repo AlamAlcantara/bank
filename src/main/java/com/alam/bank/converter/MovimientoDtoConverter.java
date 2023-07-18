@@ -30,7 +30,10 @@ public class MovimientoDtoConverter implements DtoConverter<Movimiento, Movimien
 
     @Override
     public MovimientoDto fromEntity(Movimiento entity) {
-        return this.modelMapper.map(entity, MovimientoDto.class);
+        MovimientoDto movimientoDto = this.modelMapper.map(entity, MovimientoDto.class);
+        movimientoDto.setTipoMovimiento(entity.getTipoMovimiento().getNombre());
+
+        return movimientoDto;
     }
 
     @Override
