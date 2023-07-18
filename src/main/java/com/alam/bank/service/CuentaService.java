@@ -5,9 +5,9 @@ import com.alam.bank.entity.Cuenta;
 import com.alam.bank.models.CuentaDto;
 import com.alam.bank.repository.interfaces.CuentaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 
-@Repository
+@Service
 public class CuentaService extends BaseServiceImpl<CuentaDto, Cuenta, CuentaRepository> {
 
     @Autowired
